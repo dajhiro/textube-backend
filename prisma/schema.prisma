@@ -7,17 +7,54 @@ generator client {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  googleId  String   @unique
-  createdAt DateTime @default(now())
+  id             Int      @id @default(autoincrement())
+  email          String   @unique
+  googleId       String   @unique
+  name           String?
+  profilePicture String?
+  createdAt      DateTime @default(now())
+  posts          Post[]
+}
+
+model Channel {
+  id      String  @id
+  name    String
+  image   String
+  posts   Post[]
+}
+
+enum PostStatus {
+  PENDING
+  PUBLISHED
 }
 
 model Post {
-  id        Int      @id @default(autoincrement())
-  title     String
-  content   String?
-  author    User     @relation(fields: [authorId], references: [id])
-  authorId  Int
-  createdAt DateTime @default(now())
+  id           Int        @id @default(autoincrement())
+  title        String
+  content      String     @db.Text
+  thumbnailUrl String     // 유튜브 썸네일 중 가장 큰 사이즈
+  youtubeId    String     @unique // 유튜브 영상 고유 ID
+
+  // 핵심 메타데이터 (JSONB)
+  metadata     Json       @default("{}") @db.JsonB
+
+  // 분류 및 상태
+  category     String?
+  tags         String[]
+
+  viewCount    Int        @default(0)
+  status       PostStatus @default(PENDING)
+  published    Boolean    @default(false)
+
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // 관계 설정
+  channelId    String
+  channel      Channel    @relation(fields: [channelId], references: [id])
+
+  userId       Int
+  user         User       @relation(fields: [userId], references: [id])
+
+  @@index([youtubeId])
 }
