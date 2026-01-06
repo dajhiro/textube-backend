@@ -20,6 +20,13 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "@core/*": ["src/core/*"],
+      "@integrations/*": ["src/integrations/*"],
+      "@features/*": ["src/features/*"],
+      "@domain/*": ["src/domain/*"],
+      "@common/*": ["src/common/*"]
+    }
   }
 }
