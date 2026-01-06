@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PostStatus } from '@prisma/client';
-import { InnertubeService } from '@integrations/innertube/innertube.service';
+import { InnertubeLegacyService } from '@integrations/innertube/innertube-legacy.service';
 import { YoutubeDataService } from '@integrations/youtube-data/youtube-data.service';
 import { AiService } from '@integrations/ai/ai.service';
 import { PrismaService } from '@core/prisma/prisma.service';
@@ -14,7 +14,7 @@ export class ContentPipelineService {
   private readonly logger = new Logger(ContentPipelineService.name);
 
   constructor(
-    private innertubeService: InnertubeService,
+    private innertubeService: InnertubeLegacyService,
     private youtubeDataService: YoutubeDataService,
     private aiService: AiService,
     private prisma: PrismaService,

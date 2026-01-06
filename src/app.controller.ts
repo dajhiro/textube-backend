@@ -1,6 +1,7 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { AppService } from './app.service';
 import { InnertubeService } from '@integrations/innertube/innertube.service';
+import { InnertubeLegacyService } from '@integrations/innertube/innertube-legacy.service';
 import { AiService } from '@integrations/ai/ai.service';
 
 @Controller()
@@ -8,6 +9,7 @@ export class AppController {
   constructor(
     private readonly appService: AppService,
     private readonly innertubeService: InnertubeService,
+    private readonly innertubeLegacyService: InnertubeLegacyService,
     private readonly aiService: AiService,
   ) {}
 
@@ -64,5 +66,115 @@ export class AppController {
         error: error.message,
       };
     }
+  }
+
+  @Get('test-innertube-new')
+  async testInnertubeNew(@Query('url') url: string) {
+    try {
+      console.log(`\n=== Testing New Innertube (YouTube.js) ===`);
+      const startTime = Date.now();
+      const result = await this.innertubeService.getTranscriptFromUrl(url);
+      const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+
+      return {
+        success: true,
+        implementation: 'YouTube.js',
+        duration: `${duration}s`,
+        result: {
+          videoId: result.videoId,
+          languageCode: result.languageCode,
+          textLength: result.text.length,
+          preview: result.text.substring(0, 200) + '...',
+        },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        implementation: 'YouTube.js',
+        error: error.message,
+      };
+    }
+  }
+
+  @Get('test-innertube-legacy')
+  async testInnertubeLegacy(@Query('url') url: string) {
+    try {
+      console.log(`\n=== Testing Legacy Innertube ===`);
+      const startTime = Date.now();
+      const result =
+        await this.innertubeLegacyService.getTranscriptFromUrl(url);
+      const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+
+      return {
+        success: true,
+        implementation: 'Legacy',
+        duration: `${duration}s`,
+        result: {
+          videoId: result.videoId,
+          languageCode: result.languageCode,
+          textLength: result.text.length,
+          preview: result.text.substring(0, 200) + '...',
+        },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        implementation: 'Legacy',
+        error: error.message,
+      };
+    }
+  }
+
+  @Get('test-innertube-compare')
+  async testInnertubeCompare(@Query('url') url: string) {
+    const results = {
+      url,
+      timestamp: new Date().toISOString(),
+      new: null as any,
+      legacy: null as any,
+    };
+
+    // Test new implementation
+    try {
+      const startTime = Date.now();
+      const result = await this.innertubeService.getTranscriptFromUrl(url);
+      const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+
+      results.new = {
+        success: true,
+        duration: `${duration}s`,
+        videoId: result.videoId,
+        languageCode: result.languageCode,
+        textLength: result.text.length,
+      };
+    } catch (error) {
+      results.new = {
+        success: false,
+        error: error.message,
+      };
+    }
+
+    // Test legacy implementation
+    try {
+      const startTime = Date.now();
+      const result =
+        await this.innertubeLegacyService.getTranscriptFromUrl(url);
+      const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+
+      results.legacy = {
+        success: true,
+        duration: `${duration}s`,
+        videoId: result.videoId,
+        languageCode: result.languageCode,
+        textLength: result.text.length,
+      };
+    } catch (error) {
+      results.legacy = {
+        success: false,
+        error: error.message,
+      };
+    }
+
+    return results;
   }
 }

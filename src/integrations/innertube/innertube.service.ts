@@ -1,30 +1,22 @@
 import { Injectable, Logger } from '@nestjs/common';
-
-interface CaptionTrack {
-  baseUrl: string;
-  languageCode: string;
-  kind?: string;
-}
-
-interface Json3Event {
-  segs?: Array<{ utf8: string }>;
-}
-
-interface Json3 {
-  events: Json3Event[];
-}
-
-export interface TranscriptResult {
-  videoId: string;
-  languageCode: string;
-  text: string;
-}
+import { Innertube } from 'youtubei.js';
+import {
+  IInnertubeService,
+  TranscriptResult,
+} from './innertube.interface';
 
 @Injectable()
-export class InnertubeService {
+export class InnertubeService implements IInnertubeService {
   private readonly logger = new Logger(InnertubeService.name);
-  private readonly YOUTUBE_API_URL =
-    'https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlQT1oK6U2qC3q6C-qofsasodY';
+  private innertube: Innertube | null = null;
+
+  private async getClient(): Promise<Innertube> {
+    if (!this.innertube) {
+      this.innertube = await Innertube.create();
+      this.logger.log('YouTube.js client initialized');
+    }
+    return this.innertube;
+  }
 
   private extractId(url: string): string | null {
     try {
@@ -43,66 +35,6 @@ export class InnertubeService {
     return null;
   }
 
-  private async fetchTranscript(videoId: string): Promise<any> {
-    const body = {
-      videoId,
-      context: {
-        client: {
-          clientName: 'WEB',
-          clientVersion: '2.20240201',
-        },
-      },
-    };
-
-    const response = await fetch(this.YOUTUBE_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept-Language': 'ko-KR,ko;q=0.9',
-      },
-      body: JSON.stringify(body),
-    });
-
-    return response.json();
-  }
-
-  private selectTrack(tracks: CaptionTrack[]): CaptionTrack | null {
-    if (!tracks || tracks.length === 0) return null;
-
-    const asr = tracks.find((t) => t.kind === 'asr');
-
-    if (asr) {
-      const uploaded = tracks.find(
-        (t) => !t.kind && t.languageCode === asr.languageCode,
-      );
-
-      return uploaded || asr;
-    }
-
-    const anyUploaded = tracks.find((t) => !t.kind);
-    if (anyUploaded) return anyUploaded;
-
-    return tracks[0];
-  }
-
-  private json3ToText(vtt: Json3): string {
-    return vtt.events
-      .filter((event) => event.segs && event.segs.length > 0)
-      .flatMap((event) => event.segs || [])
-      .map((seg) => seg?.utf8 || '')
-      .map((text) =>
-        text
-          .replace(/^>>?\s*/, '')
-          .replace(/\[.*?\]/g, ''),
-      )
-      .filter((text) => text !== '\n' || text.length > 0)
-      .join(' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-  }
-
   async getTranscriptFromUrl(url: string): Promise<TranscriptResult> {
     const videoId = this.extractId(url);
 
@@ -110,38 +42,56 @@ export class InnertubeService {
       throw new Error('올바르지 않은 YouTube URL입니다');
     }
 
-    this.logger.log(`Fetching transcript for video: ${videoId}`);
+    this.logger.log(`[YouTube.js] Fetching transcript for video: ${videoId}`);
 
-    const data = await this.fetchTranscript(videoId);
-    const tracks =
-      data?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
+    try {
+      const client = await this.getClient();
+      const info = await client.getInfo(videoId);
 
-    if (!tracks || tracks.length === 0) {
-      throw new Error('자막이 존재하지 않습니다');
+      // Use youtubei.js built-in transcript method if available
+      const transcriptData = await info.getTranscript();
+
+      if (!transcriptData || !transcriptData.transcript) {
+        throw new Error('자막이 존재하지 않습니다');
+      }
+
+      // Access the transcript content
+      const segments =
+        transcriptData.transcript.content?.body?.initial_segments;
+
+      if (!segments || segments.length === 0) {
+        throw new Error('자막 세그먼트가 비어 있습니다');
+      }
+
+      // Extract text from segments
+      const text = segments
+        .filter((segment: any) => segment.snippet)
+        .map((segment: any) => segment.snippet.text?.toString() || '')
+        .filter((text: string) => text.length > 0)
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      // Try to get language code
+      const languageCode = 'auto'; // youtubei.js doesn't expose language easily
+
+      this.logger.log(
+        `[YouTube.js] Successfully fetched transcript for ${videoId} (${languageCode}, ${text.length} chars)`,
+      );
+
+      return {
+        videoId,
+        languageCode,
+        text,
+      };
+    } catch (error) {
+      this.logger.error(
+        `[YouTube.js] Failed to fetch transcript for ${videoId}:`,
+        error,
+      );
+      throw new Error(
+        `자막을 가져오는 데 실패했습니다: ${error.message}`,
+      );
     }
-
-    const track = this.selectTrack(tracks);
-    if (!track) {
-      throw new Error('사용 가능한 자막 트랙이 없습니다');
-    }
-
-    const captionUrl = track.baseUrl + '&fmt=json3';
-    const json3 = await fetch(captionUrl).then((r) => r.json());
-
-    if (!json3) {
-      throw new Error('자막이 비어 있습니다');
-    }
-
-    const text = this.json3ToText(json3);
-
-    this.logger.log(
-      `Successfully fetched transcript for ${videoId} (${track.languageCode})`,
-    );
-
-    return {
-      videoId,
-      languageCode: track.languageCode,
-      text,
-    };
   }
 }
