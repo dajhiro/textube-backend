@@ -3,58 +3,62 @@ datasource db {
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 model User {
-  id             Int      @id @default(autoincrement())
-  email          String   @unique
-  googleId       String   @unique
-  name           String?
-  profilePicture String?
-  createdAt      DateTime @default(now())
-  posts          Post[]
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  googleId  String   @unique @map("google_id")
+  name      String?
+  image     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  posts     Post[]
+
+  @@map("user")
 }
 
 model Channel {
-  id      String  @id
-  name    String
-  image   String
-  posts   Post[]
-}
+  id    String @id
+  name  String
+  image String
+  posts Post[]
 
-enum PostStatus {
-  PENDING
-  PUBLISHED
+  @@map("channel")
 }
 
 model Post {
-  id           Int        @id @default(autoincrement())
+  id           Int      @id @default(autoincrement())
   title        String
-  content      String     @db.Text
-  thumbnailUrl String     // 유튜브 썸네일 중 가장 큰 사이즈
-  youtubeId    String     @unique // 유튜브 영상 고유 ID
+  content      String   @db.Text
+  thumbnailUrl String   @map("thumbnail_url") // 유튜브 썸네일 중 가장 큰 사이즈
+  youtubeId    String   @unique @map("youtube_id") // 유튜브 영상 고유 ID
 
   // 핵심 메타데이터 (JSONB)
-  metadata     Json       @default("{}") @db.JsonB
+  metadata     Json     @default("{}") @db.JsonB
 
   // 분류 및 상태
   category     String?
   tags         String[]
 
-  viewCount    Int        @default(0)
-  status       PostStatus @default(PENDING)
-  published    Boolean    @default(false)
+  viewCount    Int      @default(0) @map("view_count")
+  likeCount    Int      @default(0) @map("like_count")
+  commentCount Int      @default(0) @map("comment_count")
 
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  isReady      Boolean  @default(false) @map("is_ready")
+  isPublic     Boolean  @default(true) @map("is_public")
+
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   // 관계 설정
-  channelId    String
-  channel      Channel    @relation(fields: [channelId], references: [id])
+  channelId    String   @map("channel_id")
+  channel      Channel  @relation(fields: [channelId], references: [id])
 
-  userId       Int
-  user         User       @relation(fields: [userId], references: [id])
+  userId       Int      @map("user_id")
+  user         User     @relation(fields: [userId], references: [id])
 
   @@index([youtubeId])
+  @@map("post")
 }
