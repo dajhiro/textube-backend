@@ -11,6 +11,10 @@ import { AiModule } from '@integrations/ai/ai.module';
 import { YoutubeDataModule } from '@integrations/youtube-data/youtube-data.module';
 import { InnertubeModule } from '@integrations/innertube/innertube.module';
 import { ContentPipelineModule } from '@features/content-pipeline/content-pipeline.module';
+import { DevModule } from './dev/dev.module';
+
+// Conditionally include DevModule based on environment
+const isDevelopment = process.env.NODE_ENV !== 'production';
 
 @Module({
   imports: [
@@ -26,6 +30,8 @@ import { ContentPipelineModule } from '@features/content-pipeline/content-pipeli
     YoutubeDataModule,
     InnertubeModule,
     ContentPipelineModule,
+    // Only load DevModule in development/staging
+    ...(isDevelopment ? [DevModule] : []),
   ],
   controllers: [AppController],
   providers: [AppService],
