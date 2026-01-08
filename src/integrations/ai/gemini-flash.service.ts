@@ -84,6 +84,8 @@ export class GeminiFlashService implements IAiService {
       model: this.modelName,
       contents: prompt,
       config: {
+        maxOutputTokens: 4096,
+        temperature: 0.7,
         responseMimeType: 'application/json',
         responseSchema: {
           type: 'object',

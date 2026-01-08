@@ -2,6 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@core/prisma/prisma.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import {
+  GetPostsQueryDto,
+  GetPostsResponseDto,
+} from './dto/get-posts-query.dto';
 
 @Injectable()
 export class PostsService {
@@ -25,6 +29,71 @@ export class PostsService {
         createdAt: 'desc',
       },
     });
+  }
+
+  async findAllPublic(
+    query: GetPostsQueryDto,
+  ): Promise<GetPostsResponseDto> {
+    const { cursor, limit = 20, category, tag } = query;
+
+    // Build where clause
+    const where: any = {
+      isPublic: true,
+      isReady: true, // 준비된 게시글만
+    };
+
+    if (category) {
+      where.category = category;
+    }
+
+    if (tag) {
+      where.tags = {
+        has: tag,
+      };
+    }
+
+    // Cursor-based pagination
+    if (cursor) {
+      where.id = {
+        lt: cursor, // cursor보다 작은 ID (최신순이므로)
+      };
+    }
+
+    // Fetch limit + 1 to check if there's a next page
+    const posts = await this.prisma.post.findMany({
+      where,
+      take: limit + 1,
+      orderBy: {
+        createdAt: 'desc',
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            image: true,
+          },
+        },
+        channel: {
+          select: {
+            id: true,
+            name: true,
+            image: true,
+          },
+        },
+      },
+    });
+
+    // Check if there's a next page
+    const hasMore = posts.length > limit;
+    const result = hasMore ? posts.slice(0, limit) : posts;
+    const nextCursor = hasMore ? result[result.length - 1].id : null;
+
+    return {
+      posts: result,
+      nextCursor,
+      hasMore,
+    };
   }
 
   async findOne(id: number) {

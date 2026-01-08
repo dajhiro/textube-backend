@@ -1,5 +1,3 @@
-import { PostStatus } from '@prisma/client';
-
 export interface PostMetadata {
   seo: {
     title: string;
@@ -15,13 +13,14 @@ export class GeneratedPostDataDto {
   title: string;
   content: string;
   thumbnailUrl: string;
-  youtubeId: string;
-  metadata: PostMetadata;
+
   category: string;
   tags: string[];
-  status: PostStatus;
-  published: boolean;
+
+  youtubeId: string;
   channelId: string;
   channelName: string;
   channelImage: string;
+
+  metadata: PostMetadata;
 }

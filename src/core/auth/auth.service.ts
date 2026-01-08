@@ -8,7 +8,7 @@ export class AuthService {
   async validateGoogleUser(profile: any) {
     const { id, emails, displayName, photos } = profile;
     const email = emails[0].value;
-    const profilePicture = photos?.[0]?.value;
+    const image = photos?.[0]?.value;
 
     let user = await this.usersService.findByGoogleId(id);
 
@@ -21,13 +21,13 @@ export class AuthService {
         email,
         googleId: id,
         name: displayName,
-        profilePicture,
+        image,
       });
     } else {
-      // Update profile picture and name if changed
+      // Update image and name if changed
       user = await this.usersService.update(user.id, {
         name: displayName,
-        profilePicture,
+        image,
       });
     }
 

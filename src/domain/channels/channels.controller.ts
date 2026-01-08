@@ -15,6 +15,7 @@ import { UpdateChannelDto } from './dto/update-channel.dto';
 export class ChannelsController {
   constructor(private readonly channelsService: ChannelsService) {}
 
+  /*
   @Post()
   create(@Body() createChannelDto: CreateChannelDto) {
     return this.channelsService.create(createChannelDto);
@@ -39,4 +40,5 @@ export class ChannelsController {
   remove(@Param('id') id: string) {
     return this.channelsService.remove(id);
   }
+  */
 }

@@ -9,6 +9,7 @@ export class ContentPipelineController {
 
   constructor(private readonly contentPipelineService: ContentPipelineService) {}
 
+  /*
   @Post('generate')
   async generatePost(@Body() input: GeneratePostInputDto) {
     this.logger.log(`Received request to generate post from URL: ${input.youtubeUrl}`);
@@ -22,6 +23,7 @@ export class ContentPipelineController {
       throw error;
     }
   }
+  */
 
   @Post('create-post')
   @HttpCode(202)

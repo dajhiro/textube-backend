@@ -1,5 +1,5 @@
+import { extractYoutubeVideoId } from '@common/utils/youtube.util';
 import { Injectable, Logger } from '@nestjs/common';
-import { PostStatus } from '@prisma/client';
 import { InnertubeLegacyService } from '@integrations/innertube/innertube-legacy.service';
 import { YoutubeDataService } from '@integrations/youtube-data/youtube-data.service';
 import { AiService } from '@integrations/ai/ai.service';
@@ -21,29 +21,14 @@ export class ContentPipelineService {
     private postsService: PostsService,
   ) {}
 
-  private extractVideoId(url: string): string {
-    try {
-      const urlObj = new URL(url);
-      if (urlObj.hostname.includes('youtube.com')) {
-        return urlObj.searchParams.get('v') || '';
-      }
-      if (urlObj.hostname.includes('youtu.be')) {
-        return urlObj.pathname.replace('/', '');
-      }
-    } catch {
-      throw new Error('Invalid YouTube URL');
-    }
-    throw new Error('Invalid YouTube URL');
-  }
-
-  async generatePostData(
+  private async generatePostData(
     input: GeneratePostInputDto,
   ): Promise<GeneratedPostDataDto> {
     const { youtubeUrl } = input;
     this.logger.log(`Starting content pipeline for URL: ${youtubeUrl}`);
 
     // 1. Extract video ID
-    const videoId = this.extractVideoId(youtubeUrl);
+    const videoId = extractYoutubeVideoId(youtubeUrl);
     this.logger.log(`Extracted video ID: ${videoId}`);
 
     // 2. Get transcript from Innertube
@@ -69,7 +54,6 @@ export class ContentPipelineService {
       title: aiEnrichedFields.seo.title,
       content: aiEnrichedFields.content,
       thumbnailUrl: videoDetails.thumbnailUrl,
-      youtubeId: videoId,
       metadata: {
         seo: aiEnrichedFields.seo,
         ai_stats: {
@@ -78,8 +62,7 @@ export class ContentPipelineService {
       },
       category: aiEnrichedFields.category,
       tags: aiEnrichedFields.tags,
-      status: PostStatus.PENDING,
-      published: false,
+      youtubeId: videoId,
       channelId: videoDetails.channelId,
       channelName: videoDetails.channelName,
       channelImage: videoDetails.channelImage,
@@ -90,7 +73,7 @@ export class ContentPipelineService {
   }
 
   async createPostFromUrl(input: CreatePostFromUrlDto): Promise<void> {
-    const { youtubeUrl, userId, published = true } = input;
+    const { youtubeUrl, userId, isPublic = true } = input;
     this.logger.log(
       `Creating post from URL: ${youtubeUrl} for user ${userId}`,
     );
@@ -123,8 +106,8 @@ export class ContentPipelineService {
         metadata: postData.metadata,
         category: postData.category,
         tags: postData.tags,
-        status: postData.status,
-        published: published,
+        isReady: true,
+        isPublic: isPublic,
         channelId: postData.channelId,
         userId: userId,
       });

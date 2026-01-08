@@ -5,9 +5,7 @@ import {
   IsUrl,
   IsArray,
   IsBoolean,
-  IsEnum,
 } from 'class-validator';
-import { PostStatus } from '@prisma/client';
 
 export class CreatePostDto {
   @IsString()
@@ -33,13 +31,25 @@ export class CreatePostDto {
   @IsString({ each: true })
   tags: string[];
 
-  @IsEnum(PostStatus)
+  @IsBoolean()
   @IsOptional()
-  status?: PostStatus;
+  isReady?: boolean;
 
   @IsBoolean()
   @IsOptional()
-  published?: boolean;
+  isPublic?: boolean;
+
+  @IsInt()
+  @IsOptional()
+  viewCount?: number;
+
+  @IsInt()
+  @IsOptional()
+  likeCount?: number;
+
+  @IsInt()
+  @IsOptional()
+  commentCount?: number;
 
   @IsString()
   channelId: string;

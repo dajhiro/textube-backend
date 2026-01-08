@@ -1,0 +1,16 @@
+### 환경 변수 설정 (파일 상단 혹은 별도 env 파일)
+@baseUrl = http://localhost:4000
+@youtubeUrl = https://www.youtube.com/watch?v=wCyE2zmik6Y
+@userId = 1
+
+### 1. 포스트 생성 요청 (Fire and Forget)
+# @name createPost
+POST {{baseUrl}}/content-pipeline/create-post
+Content-Type: application/json
+
+{
+    "youtubeUrl": "{{youtubeUrl}}",
+    "userId": {{userId}},
+    "isPublic": true
+}
+

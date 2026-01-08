@@ -10,5 +10,5 @@ export class CreatePostFromUrlDto {
 
   @IsBoolean()
   @IsOptional()
-  published?: boolean;
+  isPublic?: boolean;
 }
