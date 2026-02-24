@@ -16,6 +16,11 @@ async function bootstrap() {
     .map((origin) => origin.trim())
     .filter(Boolean);
 
+  const frontendUrl = configService.get('FRONTEND_URL');
+  if (frontendUrl && !corsOrigins.includes(frontendUrl)) {
+    corsOrigins.push(frontendUrl);
+  }
+
   const isProduction = configService.get('NODE_ENV') === 'production';
 
   app.enableCors({
