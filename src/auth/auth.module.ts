@@ -4,7 +4,7 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { SessionSerializer } from './session.serializer';
-import { UsersModule } from '@domain/users/users.module';
+import { UsersModule } from '@users/users.module';
 
 @Module({
   imports: [
