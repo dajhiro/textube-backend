@@ -18,7 +18,6 @@ import { GetPostsQueryDto } from './dto/get-posts-query.dto';
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
-/*
   @Post()
   create(@Body() createPostDto: CreatePostDto) {
     return this.postsService.create(createPostDto);
@@ -46,5 +45,4 @@ export class PostsController {
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.postsService.remove(id);
   }
-*/
 }

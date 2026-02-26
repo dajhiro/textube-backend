@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@core/prisma/prisma.service';
+import { PrismaService } from '@prisma/prisma.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import {
@@ -23,7 +23,7 @@ export class PostsService {
   async findAll() {
     return this.prisma.post.findMany({
       include: {
-        user: true,
+        channel: true,
       },
       orderBy: {
         createdAt: 'desc',
@@ -100,7 +100,7 @@ export class PostsService {
     return this.prisma.post.findUnique({
       where: { id },
       include: {
-        user: true,
+        channel: true,
       },
     });
   }
@@ -109,7 +109,7 @@ export class PostsService {
     return this.prisma.post.findMany({
       where: { userId },
       include: {
-        user: true,
+        channel: true,
       },
       orderBy: {
         createdAt: 'desc',
