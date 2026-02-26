@@ -1,6 +1,6 @@
 import { IsString, IsInt, IsUrl, IsBoolean, IsOptional } from 'class-validator';
 
-export class CreatePostFromUrlDto {
+export class UploadRequestDto {
   @IsUrl()
   @IsString()
   youtubeUrl: string;

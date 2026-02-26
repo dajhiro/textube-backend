@@ -3,15 +3,14 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InnertubeLegacyService } from '@integrations/innertube/innertube-legacy.service';
 import { YoutubeDataService } from '@integrations/youtube-data/youtube-data.service';
 import { AiService } from '@integrations/ai/ai.service';
-import { PrismaService } from '@core/prisma/prisma.service';
-import { PostsService } from '@domain/posts/posts.service';
-import { GeneratePostInputDto } from './dto/generate-post-input.dto';
-import { GeneratedPostDataDto } from './dto/generated-post-data.dto';
-import { CreatePostFromUrlDto } from './dto/create-post-from-url.dto';
+import { PrismaService } from '@prisma/prisma.service';
+import { PostsService } from '@posts/posts.service';
+import { GeneratedPostData } from './dto/generated-post-data';
+import { UploadRequestDto } from './dto/upload-request.dto';
 
 @Injectable()
-export class ContentPipelineService {
-  private readonly logger = new Logger(ContentPipelineService.name);
+export class UploadService {
+  private readonly logger = new Logger(UploadService.name);
 
   constructor(
     private innertubeService: InnertubeLegacyService,
@@ -21,9 +20,9 @@ export class ContentPipelineService {
     private postsService: PostsService,
   ) {}
 
-  private async generatePostData(
-    input: GeneratePostInputDto,
-  ): Promise<GeneratedPostDataDto> {
+  private async generatePostData(input: {
+    youtubeUrl: string;
+  }): Promise<GeneratedPostData> {
     const { youtubeUrl } = input;
     this.logger.log(`Starting content pipeline for URL: ${youtubeUrl}`);
 
@@ -50,7 +49,7 @@ export class ContentPipelineService {
     this.logger.log(`Generated AI content and enriched fields`);
 
     // 5. Build post data
-    const postData: GeneratedPostDataDto = {
+    const postData: GeneratedPostData = {
       title: aiEnrichedFields.seo.title,
       content: aiEnrichedFields.content,
       thumbnailUrl: videoDetails.thumbnailUrl,
@@ -72,7 +71,7 @@ export class ContentPipelineService {
     return postData;
   }
 
-  async createPostFromUrl(input: CreatePostFromUrlDto): Promise<void> {
+  async createPostFromUrl(input: UploadRequestDto): Promise<void> {
     const { youtubeUrl, userId, isPublic = true } = input;
     this.logger.log(
       `Creating post from URL: ${youtubeUrl} for user ${userId}`,

@@ -9,7 +9,7 @@ export interface PostMetadata {
   };
 }
 
-export class GeneratedPostDataDto {
+export interface GeneratedPostData {
   title: string;
   content: string;
   thumbnailUrl: string;

@@ -1,14 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ContentPipelineService } from './content-pipeline.service';
+import { UploadService } from './upload.service';
 import { InnertubeLegacyService } from '@integrations/innertube/innertube-legacy.service';
 import { YoutubeDataService } from '@integrations/youtube-data/youtube-data.service';
 import { AiService } from '@integrations/ai/ai.service';
-import { PrismaService } from '@core/prisma/prisma.service';
-import { PostsService } from '@domain/posts/posts.service';
+import { PrismaService } from '@prisma/prisma.service';
+import { PostsService } from '@posts/posts.service';
 
-describe('ContentPipelineService', () => {
-  let service: ContentPipelineService;
-  
+describe('UploadService', () => {
+  let service: UploadService;
+
   // 가짜 객체(Mock) 생성
   const mockInnertubeService = { getTranscriptFromUrl: jest.fn() };
   const mockYoutubeDataService = { getVideoDetails: jest.fn() };
@@ -19,7 +19,7 @@ describe('ContentPipelineService', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        ContentPipelineService,
+        UploadService,
         { provide: InnertubeLegacyService, useValue: mockInnertubeService },
         { provide: YoutubeDataService, useValue: mockYoutubeDataService },
         { provide: AiService, useValue: mockAiService },
@@ -28,7 +28,7 @@ describe('ContentPipelineService', () => {
       ],
     }).compile();
 
-    service = module.get<ContentPipelineService>(ContentPipelineService);
+    service = module.get<UploadService>(UploadService);
   });
 
   it('유효하지 않은 유튜브 URL이 입력되면 에러를 던져야 한다', () => {
