@@ -22,10 +22,13 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "@core/*": ["src/core/*"],
+      "@auth/*": ["src/auth/*"],
+      "@prisma/*": ["src/prisma/*"],
+      "@upload/*": ["src/upload/*"],
+      "@channels/*": ["src/channels/*"],
+      "@posts/*": ["src/posts/*"],
+      "@users/*": ["src/users/*"],
       "@integrations/*": ["src/integrations/*"],
-      "@features/*": ["src/features/*"],
-      "@domain/*": ["src/domain/*"],
       "@common/*": ["src/common/*"]
     }
   }

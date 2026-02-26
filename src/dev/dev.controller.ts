@@ -22,7 +22,7 @@ export class DevController {
       console.log(`URL: ${url}\n`);
 
       console.log('Step 1: Fetching transcript from YouTube...');
-      const transcript = await this.innertubeService.getTranscriptFromUrl(url);
+      const transcript = await this.innertubeLegacyService.getTranscriptFromUrl(url);
       console.log(`✓ Transcript fetched successfully`);
       console.log(`  - Video ID: ${transcript.videoId}`);
       console.log(`  - Language: ${transcript.languageCode}`);
