@@ -3,6 +3,7 @@ import {
   IInnertubeService,
   TranscriptResult,
 } from './innertube.interface';
+import { YtDlpService } from './ytdlp.service';
 
 interface CaptionTrack {
   baseUrl: string;
@@ -21,8 +22,9 @@ interface Json3 {
 @Injectable()
 export class InnertubeLegacyService implements IInnertubeService {
   private readonly logger = new Logger(InnertubeLegacyService.name);
-  private readonly YOUTUBE_API_URL =
-    'https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlQT1oK6U2qC3q6C-qofsasodY';
+
+  constructor(private ytDlpService: YtDlpService) {}
+  private readonly YOUTUBE_API_URL = 'https://www.youtube.com/youtubei/v1/player';
 
   private extractId(url: string): string | null {
     try {
@@ -46,8 +48,8 @@ export class InnertubeLegacyService implements IInnertubeService {
       videoId,
       context: {
         client: {
-          clientName: 'WEB',
-          clientVersion: '2.20240201',
+          clientName: 'IOS',
+          clientVersion: '19.09.3',
         },
       },
     };
@@ -57,8 +59,7 @@ export class InnertubeLegacyService implements IInnertubeService {
       headers: {
         'Content-Type': 'application/json',
         'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept-Language': 'ko-KR,ko;q=0.9',
+          'com.google.ios.youtube/19.09.3 (iPhone16,2; U; CPU iOS 17_5_1 like Mac OS X)',
       },
       body: JSON.stringify(body),
     });
@@ -111,11 +112,21 @@ export class InnertubeLegacyService implements IInnertubeService {
     this.logger.log(`[Legacy] Fetching transcript for video: ${videoId}`);
 
     const data = await this.fetchTranscript(videoId);
+    const playability = data?.playabilityStatus?.status;
+
+    if (playability === 'LOGIN_REQUIRED' || playability === 'UNPLAYABLE') {
+      this.logger.warn(
+        `[Legacy] YouTube API blocked (${playability}), falling back to yt-dlp`,
+      );
+      return this.ytDlpService.getTranscriptFromUrl(url);
+    }
+
     const tracks =
       data?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
 
     if (!tracks || tracks.length === 0) {
-      throw new Error('자막이 존재하지 않습니다');
+      this.logger.warn('[Legacy] No captions from API, falling back to yt-dlp');
+      return this.ytDlpService.getTranscriptFromUrl(url);
     }
 
     const track = this.selectTrack(tracks);

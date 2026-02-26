@@ -1,15 +1,18 @@
 import { Module } from '@nestjs/common';
 import { InnertubeService } from './innertube.service';
 import { InnertubeLegacyService } from './innertube-legacy.service';
+import { YtDlpService } from './ytdlp.service';
 
 @Module({
   providers: [
-    InnertubeService, // YouTube.js 기반 (기본값)
-    InnertubeLegacyService, // 기존 구현 (Legacy)
+    YtDlpService,
+    InnertubeService,
+    InnertubeLegacyService,
   ],
   exports: [
-    InnertubeService, // 기본 export
-    InnertubeLegacyService, // Legacy도 선택 가능
+    YtDlpService,
+    InnertubeService,
+    InnertubeLegacyService,
   ],
 })
 export class InnertubeModule {}
