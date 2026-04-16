@@ -71,8 +71,11 @@ export class UploadService {
     return postData;
   }
 
-  async createPostFromUrl(input: UploadRequestDto): Promise<void> {
-    const { youtubeUrl, userId, isPublic = true } = input;
+  async createPostFromUrl(
+    input: Omit<UploadRequestDto, 'userId'>,
+    userId: number,
+  ): Promise<void> {
+    const { youtubeUrl, isPublic = true } = input;
     this.logger.log(
       `Creating post from URL: ${youtubeUrl} for user ${userId}`,
     );

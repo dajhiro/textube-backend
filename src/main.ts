@@ -9,6 +9,11 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 
+  const sessionSecret = configService.get<string>('SESSION_SECRET');
+  if (!sessionSecret) {
+    throw new Error('SESSION_SECRET environment variable is required');
+  }
+
   // CORS configuration
   const corsOrigins = configService
     .get('CORS_ORIGINS', '')
@@ -44,7 +49,7 @@ async function bootstrap() {
   // Session configuration
   app.use(
     session({
-      secret: configService.get('SESSION_SECRET') || 'fallback-secret',
+      secret: sessionSecret,
       resave: false,
       saveUninitialized: false,
       cookie: {
