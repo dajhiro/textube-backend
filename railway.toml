@@ -3,6 +3,7 @@ builder = "railpack"
 buildCommand = "npm run build"
 
 [deploy]
+preDeployCommand = "prisma migrate deploy"
 startCommand = "npm run start:prod"
 healthcheckPath = "/health"
 healthcheckTimeout = 300
